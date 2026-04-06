@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — L'Moni Maison de Mode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Raleway:wght@200;300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root { --noir:#0c0b0b; --cream:#f7f2ea; --gold:#b8965a; --gold-light:#d4b483; --muted:#5c5147; --white:#fdfaf6; --dark2:#0f0e0d; --dark3:#141210; --success:#4a7c5a; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--noir); color:var(--cream); font-family:'Raleway',sans-serif; font-weight:300; overflow-x:hidden; cursor:none; }
+
+    .cursor { width:10px; height:10px; background:var(--gold); border-radius:50%; position:fixed; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:width .3s,height .3s; }
+    .cursor-ring { width:36px; height:36px; border:1px solid var(--gold-light); border-radius:50%; position:fixed; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:width .3s,height .3s,opacity .3s; opacity:.6; }
+
+    /* ── NAV — simplified for checkout ── */
+    nav {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1.2rem 4rem;
+      background:var(--dark3);
+      border-bottom:1px solid rgba(184,150,90,.18);
+    }
+    .nav-logo { text-align:center; flex:1; }
+    .nav-logo .logotype { font-family:'Cormorant Garamond',serif; font-size:1.55rem; font-weight:300; letter-spacing:.12em; color:var(--white); }
+    .nav-logo .logotype em { font-style:italic; color:var(--gold); }
+    .nav-logo .sub { font-size:.55rem; letter-spacing:.45em; text-transform:uppercase; color:var(--muted); margin-top:1px; }
+    .nav-back { font-size:.65rem; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); text-decoration:none; display:flex; align-items:center; gap:.6rem; transition:color .3s; cursor:none; }
+    .nav-back:hover { color:var(--gold); }
+    .nav-secure { display:flex; align-items:center; gap:.5rem; font-size:.62rem; letter-spacing:.15em; color:var(--muted); }
+    .nav-secure span { color:var(--gold); font-size:.85rem; }
+
+    /* ── PROGRESS STEPS ── */
+    .checkout-progress {
+      background:var(--dark2);
+      padding:1.5rem 4rem;
+      border-bottom:1px solid rgba(184,150,90,.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:0;
+    }
+    .progress-step {
+      display:flex;
+      align-items:center;
+      gap:.8rem;
+      cursor:none;
+    }
+    .step-circle {
+      width:32px; height:32px;
+      border-radius:50%;
+      border:1px solid rgba(184,150,90,.25);
+      display:flex; align-items:center; justify-content:center;
+      font-size:.6rem; letter-spacing:.1em;
+      color:var(--muted);
+      transition:all .3s;
+      flex-shrink:0;
+      font-family:'Raleway',sans-serif;
+    }
+    .progress-step.done .step-circle { background:var(--gold); border-color:var(--gold); color:var(--noir); }
+    .progress-step.active .step-circle { background:rgba(184,150,90,.15); border-color:var(--gold); color:var(--gold); }
+    .step-label { font-size:.6rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
+    .progress-step.done .step-label, .progress-step.active .step-label { color:var(--gold-light); }
+    .progress-line { width:60px; height:1px; background:rgba(184,150,90,.18); margin:0 .8rem; }
+    .progress-line.done { background:var(--gold); }
+
+    /* ── CHECKOUT LAYOUT ── */
+    .checkout-wrapper {
+      display:grid;
+      grid-template-columns:1fr 420px;
+      gap:0;
+      min-height:calc(100vh - 140px);
+    }
+
+    /* ── LEFT — FORM SIDE ── */
+    .checkout-form-side {
+      padding:4rem;
+      border-right:1px solid rgba(184,150,90,.1);
+    }
+
+    /* Section labels */
+    .form-section { margin-bottom:3rem; }
+    .form-section-title {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.4rem;
+      font-weight:400;
+      color:var(--white);
+      margin-bottom:1.8rem;
+      padding-bottom:.8rem;
+      border-bottom:1px solid rgba(184,150,90,.12);
+      display:flex;
+      align-items:center;
+      gap:1rem;
+    }
+    .form-section-title .step-num {
+      width:26px; height:26px;
+      border-radius:50%;
+      background:var(--gold);
+      color:var(--noir);
+      font-size:.6rem;
+      font-family:'Raleway',sans-serif;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+
+    /* Form rows */
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+    .form-row.single { grid-template-columns:1fr; }
+    .form-row.thirds { grid-template-columns:1fr 1fr 1fr; }
+
+    .form-group { display:flex; flex-direction:column; gap:.45rem; }
+    .form-label {
+      font-size:.58rem; letter-spacing:.25em; text-transform:uppercase;
+      color:var(--muted);
+    }
+    .form-input {
+      background:rgba(247,242,234,.04);
+      border:1px solid rgba(184,150,90,.2);
+      color:var(--cream);
+      padding:.85rem 1.1rem;
+      font-family:'Raleway',sans-serif;
+      font-size:.78rem;
+      letter-spacing:.04em;
+      outline:none;
+      transition:border-color .3s, background .3s;
+    }
+    .form-input::placeholder { color:var(--muted); }
+    .form-input:focus { border-color:var(--gold); background:rgba(184,150,90,.04); }
+    .form-select {
+      background:rgba(247,242,234,.04);
+      border:1px solid rgba(184,150,90,.2);
+      color:var(--cream);
+      padding:.85rem 1.1rem;
+      font-family:'Raleway',sans-serif;
+      font-size:.78rem;
+      outline:none;
+      cursor:none;
+      appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235c5147' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:right 1rem center;
+      transition:border-color .3s;
+    }
+    .form-select:focus { border-color:var(--gold); }
+    .form-select option { background:var(--dark3); }
+
+    /* Shipping options */
+    .shipping-options { display:flex; flex-direction:column; gap:.7rem; }
+    .shipping-opt {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 1.2rem;
+      border:1px solid rgba(184,150,90,.18);
+      cursor:none;
+      transition:all .3s;
+      gap:1rem;
+    }
+    .shipping-opt:hover { border-color:rgba(184,150,90,.4); background:rgba(184,150,90,.03); }
+    .shipping-opt.selected { border-color:var(--gold); background:rgba(184,150,90,.06); }
+    .shipping-opt-left { display:flex; align-items:center; gap:1rem; }
+    .shipping-radio {
+      width:16px; height:16px; border-radius:50%;
+      border:2px solid rgba(184,150,90,.3);
+      flex-shrink:0; position:relative;
+      transition:border-color .3s;
+    }
+    .shipping-opt.selected .shipping-radio { border-color:var(--gold); }
+    .shipping-opt.selected .shipping-radio::after { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:6px; height:6px; border-radius:50%; background:var(--gold); }
+    .shipping-opt-label { font-size:.72rem; color:var(--cream); }
+    .shipping-opt-sub { font-size:.6rem; color:var(--muted); margin-top:.15rem; }
+    .shipping-opt-price { font-size:.72rem; color:var(--gold); letter-spacing:.05em; flex-shrink:0; }
+
+    /* Payment */
+    .payment-methods { display:flex; gap:.7rem; margin-bottom:1.5rem; }
+    .pay-method {
+      flex:1; padding:.7rem; border:1px solid rgba(184,150,90,.18);
+      display:flex; align-items:center; justify-content:center; gap:.5rem;
+      cursor:none; transition:all .3s; font-size:.6rem; letter-spacing:.15em;
+      text-transform:uppercase; color:var(--muted);
+    }
+    .pay-method:hover { border-color:rgba(184,150,90,.4); color:var(--cream); }
+    .pay-method.selected { border-color:var(--gold); color:var(--gold); background:rgba(184,150,90,.05); }
+    .pay-method .pay-icon { font-size:1.1rem; }
+
+    .hosted-pay-note {
+      display:none;
+      border:1px solid rgba(184,150,90,.22);
+      background:rgba(184,150,90,.05);
+      padding:1rem 1.1rem;
+      font-size:.68rem;
+      line-height:1.8;
+      color:rgba(247,242,234,.7);
+      margin-bottom:1.2rem;
+    }
+    .hosted-pay-note.show { display:block; }
+    .hosted-pay-note strong { color:var(--gold-light); font-weight:500; }
+    .hosted-pay-actions {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:.7rem;
+      margin-bottom:1.2rem;
+    }
+    .hosted-pay-btn {
+      border:1px solid rgba(184,150,90,.3);
+      background:transparent;
+      color:var(--cream);
+      padding:.85rem 1rem;
+      font-family:'Raleway',sans-serif;
+      font-size:.62rem;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      cursor:none;
+      transition:all .3s;
+    }
+    .hosted-pay-btn:hover { border-color:var(--gold); color:var(--gold); background:rgba(184,150,90,.05); }
+    .hosted-pay-btn.active { border-color:var(--gold); color:var(--gold); background:rgba(184,150,90,.1); }
+    .hosted-pay-btn:disabled { opacity:.45; cursor:not-allowed; }
+
+    /* Card icons row */
+    .card-icons { display:flex; gap:.6rem; margin-bottom:1.2rem; align-items:center; }
+    .card-icon { background:rgba(247,242,234,.06); border:1px solid rgba(184,150,90,.1); padding:.3rem .6rem; font-size:.6rem; letter-spacing:.1em; color:var(--muted); }
+
+    /* Promo code */
+    .promo-row { display:flex; gap:.7rem; }
+    .promo-row .form-input { flex:1; }
+    .promo-btn {
+      background:transparent; border:1px solid rgba(184,150,90,.3);
+      color:var(--gold); padding:.85rem 1.4rem;
+      font-family:'Raleway',sans-serif; font-size:.62rem;
+      letter-spacing:.22em; text-transform:uppercase;
+      cursor:none; transition:all .3s; white-space:nowrap;
+    }
+    .promo-btn:hover { background:var(--gold); color:var(--noir); border-color:var(--gold); }
+
+    /* Gift wrap toggle */
+    .gift-toggle {
+      display:flex; align-items:center; gap:1rem;
+      padding:1rem 1.2rem;
+      border:1px solid rgba(184,150,90,.18);
+      cursor:none; transition:all .3s; margin-bottom:.8rem;
+    }
+    .gift-toggle:hover { border-color:rgba(184,150,90,.35); }
+    .gift-toggle.active { border-color:var(--gold); background:rgba(184,150,90,.05); }
+    .toggle-box { width:18px; height:18px; border:1px solid rgba(184,150,90,.35); flex-shrink:0; position:relative; transition:all .3s; }
+    .gift-toggle.active .toggle-box { background:var(--gold); border-color:var(--gold); }
+    .gift-toggle.active .toggle-box::after { content:'✓'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--noir); font-size:.65rem; font-weight:700; }
+    .toggle-text { font-size:.72rem; color:rgba(247,242,234,.65); }
+    .toggle-text strong { color:var(--cream); }
+    .toggle-price { margin-left:auto; font-size:.68rem; color:var(--gold); flex-shrink:0; }
+
+    /* Place order btn */
+    .place-order-btn {
+      width:100%;
+      background:var(--gold);
+      color:var(--noir);
+      border:none;
+      padding:1.2rem 2rem;
+      font-family:'Raleway',sans-serif;
+      font-size:.72rem; letter-spacing:.3em;
+      text-transform:uppercase; font-weight:600;
+      cursor:none; transition:background .3s;
+      display:flex; align-items:center; justify-content:center; gap:1rem;
+      margin-top:2rem;
+    }
+    .place-order-btn:hover { background:var(--gold-light); }
+    .secure-note { display:flex; align-items:center; justify-content:center; gap:.6rem; font-size:.6rem; color:var(--muted); margin-top:1rem; }
+    .secure-note span { color:var(--gold); }
+
+    /* ── RIGHT — ORDER SUMMARY ── */
+    .order-summary {
+      background:var(--dark3);
+      padding:4rem 3rem;
+      position:sticky;
+      top:0;
+      height:fit-content;
+      min-height:100vh;
+    }
+    .summary-title {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.4rem; font-weight:400;
+      color:var(--white); margin-bottom:2rem;
+      padding-bottom:.8rem;
+      border-bottom:1px solid rgba(184,150,90,.12);
+    }
+
+    /* Cart items */
+    .cart-items { display:flex; flex-direction:column; gap:1.5rem; margin-bottom:2rem; }
+    .cart-item { display:flex; gap:1.2rem; align-items:flex-start; }
+    .cart-item-img {
+      width:72px; height:90px; flex-shrink:0;
+      background:var(--dark2); overflow:hidden; position:relative;
+    }
+    .cart-item-img img { width:100%; height:100%; object-fit:cover; object-position:top; filter:brightness(.85); }
+    .cart-item-qty {
+      position:absolute; top:-6px; right:-6px;
+      width:20px; height:20px; border-radius:50%;
+      background:var(--gold); color:var(--noir);
+      font-size:.6rem; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .cart-item-details { flex:1; }
+    .cart-item-name { font-family:'Cormorant Garamond',serif; font-size:.95rem; color:var(--cream); margin-bottom:.3rem; line-height:1.25; }
+    .cart-item-meta { font-size:.58rem; color:var(--muted); letter-spacing:.08em; margin-bottom:.5rem; }
+    .cart-item-price { font-size:.75rem; color:var(--gold); letter-spacing:.06em; }
+    .cart-item-remove { font-size:.58rem; color:var(--muted); text-decoration:none; cursor:none; transition:color .3s; background:none; border:none; letter-spacing:.12em; text-transform:uppercase; }
+    .cart-item-remove:hover { color:var(--gold); }
+
+    /* Divider */
+    .summary-divider { border:none; border-top:1px solid rgba(184,150,90,.1); margin:1.5rem 0; }
+
+    /* Price breakdown */
+    .price-breakdown { display:flex; flex-direction:column; gap:.85rem; }
+    .price-row { display:flex; justify-content:space-between; align-items:center; }
+    .price-row .label { font-size:.7rem; letter-spacing:.06em; color:rgba(247,242,234,.55); }
+    .price-row .value { font-size:.72rem; color:var(--cream); letter-spacing:.05em; }
+    .price-row.discount .value { color:#7db87d; }
+    .price-row.total { margin-top:.5rem; padding-top:1rem; border-top:1px solid rgba(184,150,90,.15); }
+    .price-row.total .label { font-family:'Cormorant Garamond',serif; font-size:1.1rem; color:var(--cream); font-weight:400; }
+    .price-row.total .value { font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--gold); font-weight:300; }
+
+    /* Trust badges */
+    .trust-badges {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:.6rem; margin-top:2rem;
+    }
+    .trust-badge {
+      display:flex; align-items:center; gap:.6rem;
+      padding:.7rem;
+      border:1px solid rgba(184,150,90,.1);
+      background:rgba(184,150,90,.03);
+    }
+    .trust-badge .badge-icon { font-size:.95rem; flex-shrink:0; }
+    .trust-badge .badge-text { font-size:.55rem; letter-spacing:.08em; color:var(--muted); line-height:1.5; }
+    .trust-badge .badge-text strong { color:rgba(247,242,234,.6); display:block; font-weight:400; }
+
+    /* Giving back note */
+    .giving-note {
+      background:rgba(184,150,90,.06);
+      border:1px solid rgba(184,150,90,.2);
+      border-left:3px solid var(--gold);
+      padding:1.2rem 1.4rem;
+      margin-top:1.8rem;
+      font-size:.65rem;
+      line-height:1.8;
+      color:rgba(247,242,234,.55);
+    }
+    .giving-note strong { color:var(--gold-light); display:block; margin-bottom:.3rem; font-size:.68rem; letter-spacing:.1em; }
+
+    /* ── CONFIRMATION OVERLAY (hidden by default) ── */
+    .confirmation {
+      display:none;
+      position:fixed; inset:0;
+      background:rgba(12,11,11,.97);
+      z-index:9000;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:2rem;
+    }
+    .confirmation.show { display:flex; }
+    .confirmation-inner { max-width:560px; }
+    .confirmation-icon { font-size:3.5rem; margin-bottom:1.5rem; display:block; }
+    .confirmation-inner h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(2.5rem,5vw,4rem); font-weight:300; color:var(--white); margin-bottom:1rem; }
+    .confirmation-inner h2 em { font-style:italic; color:var(--gold-light); }
+    .confirmation-inner p { font-size:.8rem; line-height:2; color:rgba(247,242,234,.55); margin-bottom:.8rem; }
+    .confirmation-num { font-family:'Cormorant Garamond',serif; font-size:1.1rem; color:var(--gold); margin-bottom:2rem; letter-spacing:.1em; }
+    .confirmation-btns { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+    .conf-btn-primary { display:inline-flex; align-items:center; gap:.8rem; background:var(--gold); color:var(--noir); text-decoration:none; font-size:.65rem; letter-spacing:.28em; text-transform:uppercase; font-weight:600; padding:.9rem 2rem; cursor:none; transition:background .3s; border:none; }
+    .conf-btn-primary:hover { background:var(--gold-light); }
+    .conf-btn-outline { display:inline-flex; align-items:center; gap:.8rem; background:transparent; color:var(--cream); text-decoration:none; font-size:.65rem; letter-spacing:.28em; text-transform:uppercase; padding:.9rem 2rem; border:1px solid rgba(247,242,234,.25); cursor:none; transition:all .3s; }
+    .conf-btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+    
+    /* ── INLINE STYLES MOVED TO CLASSES ── */
+    .conf-note { font-size:.72rem; color:rgba(247,242,234,.45); }
+    .nav-logo a { text-decoration:none; color:inherit; }
+    .msg-field-hidden { display:none; margin-top:.8rem; }
+    .promo-title { margin-bottom:1rem; border:none; padding:0; font-size:1rem; }
+    .legal-text { font-size:.62rem; color:var(--muted); line-height:1.9; margin-top:1.5rem; }
+    .legal-link { color:var(--gold); text-decoration:none; }
+
+    /* Help overlay */
+    .help-overlay {
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(12,11,11,.95);
+      z-index:9200;
+      padding:2rem;
+      align-items:center;
+      justify-content:center;
+    }
+    .help-overlay.show { display:flex; }
+    .help-card {
+      width:min(680px,100%);
+      background:var(--dark3);
+      border:1px solid rgba(184,150,90,.25);
+      padding:2rem;
+    }
+    .help-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:1rem;
+      margin-bottom:1rem;
+    }
+    .help-title {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.5rem;
+      color:var(--white);
+      font-weight:400;
+    }
+    .help-close {
+      border:1px solid rgba(184,150,90,.25);
+      background:transparent;
+      color:var(--gold);
+      padding:.45rem .75rem;
+      font-size:.62rem;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      cursor:none;
+    }
+    .help-content {
+      font-size:.7rem;
+      line-height:1.9;
+      color:rgba(247,242,234,.75);
+    }
+    .help-content p { margin-bottom:.9rem; }
+    .help-content a { color:var(--gold-light); }
+    /* Confetti dots */
+    .confetti-dot { position:fixed; width:6px; height:6px; border-radius:50%; pointer-events:none; animation:confettiFall var(--dur) ease-out forwards; }
+    @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+    /* Footer */
+    footer { background:#080707; padding:3rem 4rem 2rem; border-top:1px solid rgba(184,150,90,.1); }
+    .footer-bottom-simple { display:flex; justify-content:space-between; align-items:center; }
+    .footer-bottom-simple p { font-size:.62rem; color:var(--muted); letter-spacing:.1em; }
+    .footer-links { display:flex; gap:1.5rem; }
+    .footer-links a { font-size:.62rem; color:var(--muted); text-decoration:none; transition:color .3s; }
+    .footer-links a:hover { color:var(--gold); }
+
+    @media(max-width:1100px){
+      .checkout-wrapper { grid-template-columns:1fr; }
+      .order-summary { position:static; }
+    }
+    @media(max-width:768px){
+      nav { padding:1rem 1.5rem; }
+      .checkout-progress { padding:1rem 1.5rem; gap:.3rem; }
+      .progress-line { width:30px; }
+      .checkout-form-side { padding:2rem 1.5rem; }
+      .order-summary { padding:2rem 1.5rem; }
+      .form-row { grid-template-columns:1fr; }
+      .form-row.thirds { grid-template-columns:1fr 1fr; }
+      .payment-methods { flex-wrap:wrap; }
+      .pay-method { min-height:42px; }
+      .hosted-pay-actions { grid-template-columns:1fr; }
+      footer { padding:2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Confirmation Overlay -->
+<div class="confirmation" id="confirmation">
+  <div class="confirmation-inner">
+    <span class="confirmation-icon">✦</span>
+    <h2>Your Order Is<br><em>On Its Way</em></h2>
+    <p>Thank you for shopping L'Moni Maison de Mode. Your order has been placed and you'll receive a confirmation email shortly with tracking information.</p>
+    <div class="confirmation-num">Order #LM-2026-00847</div>
+    <p class="conf-note">A portion of your purchase goes directly to our nonprofit partners in San Antonio. Thank you for giving back just by shopping.</p>
+    <div class="confirmation-btns">
+      <a class="conf-btn-primary" href="lmoni-maison-de-mode.html">Continue Shopping →</a>
+      <a href="mailto:support@lmonimaison.com?subject=Track%20Order%20LM-2026-00847" class="conf-btn-outline">Track My Order</a>
+    </div>
+  </div>
+</div>
+
+<!-- Help Overlay -->
+<div class="help-overlay" id="helpOverlay" aria-hidden="true">
+  <div class="help-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="help-header">
+      <h3 class="help-title" id="helpTitle">Checkout Help</h3>
+      <button class="help-close" type="button" id="helpCloseBtn">Close</button>
+    </div>
+    <div class="help-content" id="helpContent"></div>
+  </div>
+</div>
+
+<!-- Checkout Nav -->
+<nav>
+  <a href="lmoni-maison-de-mode.html" class="nav-back">← Back to Bag</a>
+  <div class="nav-logo">
+    <a href="lmoni-maison-de-mode.html">
+      <div class="logotype"><em>L'Moni</em> Maison de Mode</div>
+      <div class="sub">Secure Checkout</div>
+    </a>
+  </div>
+  <div class="nav-secure"><span>🔒</span> SSL Secured</div>
+</nav>
+
+<!-- Progress Steps -->
+<div class="checkout-progress">
+  <div class="progress-step done">
+    <div class="step-circle">✓</div>
+    <span class="step-label">Bag</span>
+  </div>
+  <div class="progress-line done"></div>
+  <div class="progress-step active">
+    <div class="step-circle">2</div>
+    <span class="step-label">Checkout</span>
+  </div>
+  <div class="progress-line"></div>
+  <div class="progress-step">
+    <div class="step-circle">3</div>
+    <span class="step-label">Confirmation</span>
+  </div>
+</div>
+
+<!-- Checkout Layout -->
+<div class="checkout-wrapper">
+
+  <!-- LEFT: Form -->
+  <div class="checkout-form-side">
+
+    <!-- Contact -->
+    <div class="form-section">
+      <div class="form-section-title"><div class="step-num">1</div> Contact Information</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input type="text" class="form-input" placeholder="Your first name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input type="text" class="form-input" placeholder="Your last name" />
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" placeholder="you@email.com" />
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-input" placeholder="(210) 000-0000" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <div class="form-section">
+      <div class="form-section-title"><div class="step-num">2</div> Shipping Address</div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label class="form-label">Street Address</label>
+          <input type="text" class="form-input" placeholder="123 Main Street" />
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label class="form-label">Apartment, Suite, Unit (optional)</label>
+          <input type="text" class="form-input" placeholder="Apt 4B" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input type="text" class="form-input" placeholder="San Antonio" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="stateSelect">State</label>
+          <select class="form-select" id="stateSelect" title="Select your state">
+            <option value="">Select State</option>
+            <option>Texas</option>
+            <option>California</option>
+            <option>Florida</option>
+            <option>New York</option>
+            <option>Georgia</option>
+            <option>Illinois</option>
+            <option>Arizona</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ZIP Code</label>
+          <input type="text" class="form-input" placeholder="78201" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="countrySelect">Country</label>
+          <select class="form-select" id="countrySelect" title="Select your country">
+            <option>United States</option>
+            <option>Canada</option>
+            <option>United Kingdom</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shipping Method -->
+    <div class="form-section">
+      <div class="form-section-title"><div class="step-num">3</div> Shipping Method</div>
+      <div class="shipping-options">
+        <div class="shipping-opt" onclick="selectShipping(this)">
+          <div class="shipping-opt-left">
+            <div class="shipping-radio"></div>
+            <div>
+              <div class="shipping-opt-label">Standard Shipping</div>
+              <div class="shipping-opt-sub">5–7 business days · USPS / UPS</div>
+            </div>
+          </div>
+          <div class="shipping-opt-price">Free</div>
+        </div>
+        <div class="shipping-opt selected" onclick="selectShipping(this)">
+          <div class="shipping-opt-left">
+            <div class="shipping-radio"></div>
+            <div>
+              <div class="shipping-opt-label">Express Shipping</div>
+              <div class="shipping-opt-sub">2–3 business days · FedEx</div>
+            </div>
+          </div>
+          <div class="shipping-opt-price">$12.95</div>
+        </div>
+        <div class="shipping-opt" onclick="selectShipping(this)">
+          <div class="shipping-opt-left">
+            <div class="shipping-radio"></div>
+            <div>
+              <div class="shipping-opt-label">Overnight Shipping</div>
+              <div class="shipping-opt-sub">Next business day · FedEx Priority</div>
+            </div>
+          </div>
+          <div class="shipping-opt-price">$28.95</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gift Options -->
+    <div class="form-section">
+      <div class="form-section-title"><div class="step-num">4</div> Gift Options</div>
+      <div class="gift-toggle" id="giftWrapToggle" onclick="toggleGift(this)">
+        <div class="toggle-box"></div>
+        <div class="toggle-text"><strong>Add L'Moni Gift Wrapping 🎀</strong><br>Signature tissue paper, ribbon & gold seal</div>
+        <div class="toggle-price">+$5.00</div>
+      </div>
+      <div class="gift-toggle" id="giftNoteToggle" onclick="toggleGift(this)">
+        <div class="toggle-box"></div>
+        <div class="toggle-text"><strong>Add a Personal Message Card ✉️</strong><br>Printed on premium card stock inside the box</div>
+        <div class="toggle-price">Free</div>
+      </div>
+      <div class="form-row single msg-field-hidden" id="messageField">
+        <div class="form-group">
+          <label class="form-label">Your Personal Message (max 150 characters)</label>
+          <input type="text" class="form-input" placeholder="Write your message here..." maxlength="150" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="form-section">
+      <div class="form-section-title"><div class="step-num">5</div> Payment Details</div>
+
+      <div class="payment-methods">
+        <div class="pay-method selected" data-method="card" onclick="selectPayment(this)"><span class="pay-icon">💳</span> Card</div>
+        <div class="pay-method" data-method="paypal" onclick="selectPayment(this)"><span class="pay-icon">P</span> PayPal</div>
+        <div class="pay-method" data-method="square" onclick="selectPayment(this)"><span class="pay-icon">◼</span> Square</div>
+      </div>
+
+      <div class="hosted-pay-note" id="hostedPayNote">
+        <strong>Secure Redirect Checkout:</strong> After clicking the button below, the customer is redirected to the selected payment provider to complete payment safely, then returned to your store.
+      </div>
+      <div class="hosted-pay-actions" id="hostedPayActions" aria-label="Hosted payment quick links">
+        <button class="hosted-pay-btn" type="button" id="paypalCheckoutBtn" data-method="paypal">Continue to PayPal</button>
+        <button class="hosted-pay-btn" type="button" id="squareCheckoutBtn" data-method="square">Continue to Square</button>
+      </div>
+
+      <div id="cardPaymentFields">
+        <div class="card-icons">
+          <span class="card-icon">VISA</span>
+          <span class="card-icon">MC</span>
+          <span class="card-icon">AMEX</span>
+          <span class="card-icon">DISC</span>
+        </div>
+
+        <div class="form-row single">
+          <div class="form-group">
+            <label class="form-label">Card Number</label>
+            <input type="text" class="form-input" placeholder="•••• •••• •••• ••••" maxlength="19" id="cardNum" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Expiration Date</label>
+            <input type="text" class="form-input" placeholder="MM / YY" maxlength="7" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Security Code (CVV)</label>
+            <input type="text" class="form-input" placeholder="•••" maxlength="4" />
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label class="form-label">Name on Card</label>
+            <input type="text" class="form-input" placeholder="As it appears on your card" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promo Code -->
+    <div class="form-section">
+      <div class="form-section-title promo-title">Promo Code</div>
+      <div class="promo-row">
+          <input type="text" class="form-input" placeholder="Enter promo code" id="promoCodeInput" />
+          <button class="promo-btn" id="promoApplyBtn" type="button">Apply</button>
+      </div>
+    </div>
+
+    <!-- Place Order -->
+      <button class="place-order-btn" id="placeOrderBtn" type="button">
+        🔒 Place Order Securely — $0.00
+    </button>
+    <div class="secure-note"><span>🔒</span> Your payment is encrypted and 100% secure. We never store your card details.</div>
+
+      <p class="legal-text">By placing your order you agree to L'Moni Maison de Mode's <a href="#" class="legal-link" data-help-topic="terms">Terms of Service</a> and <a href="#" class="legal-link" data-help-topic="privacy">Privacy Policy</a>. Orders are processed within 1-2 business days.</p>
+  </div>
+
+  <!-- RIGHT: Order Summary -->
+  <div class="order-summary">
+      <div class="summary-title" id="summaryTitle">Your Order (3 items)</div>
+
+    <div class="cart-items">
+      <div class="cart-item">
+        <div class="cart-item-img">
+          <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=200&q=80" alt="Silk Wrap Dress" />
+          <div class="cart-item-qty">1</div>
+        </div>
+        <div class="cart-item-details">
+          <div class="cart-item-name">Silk Wrap Midi Dress</div>
+          <div class="cart-item-meta">Size: M · Color: Black</div>
+          <div class="cart-item-price">$112.00</div>
+          <button class="cart-item-remove" type="button">Remove</button>
+        </div>
+      </div>
+
+      <div class="cart-item">
+        <div class="cart-item-img">
+          <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&q=80" alt="Drop Crystal Earrings" />
+          <div class="cart-item-qty">1</div>
+        </div>
+        <div class="cart-item-details">
+          <div class="cart-item-name">Drop Crystal Earrings</div>
+          <div class="cart-item-meta">Gold Tone</div>
+          <div class="cart-item-price">$38.00</div>
+          <button class="cart-item-remove" type="button">Remove</button>
+        </div>
+      </div>
+
+      <div class="cart-item">
+        <div class="cart-item-img">
+          <img src="https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=200&q=80" alt="Strappy Gold Stiletto" />
+          <div class="cart-item-qty">1</div>
+        </div>
+        <div class="cart-item-details">
+          <div class="cart-item-name">Strappy Gold Stiletto</div>
+          <div class="cart-item-meta">Size: 8 · Gold</div>
+          <div class="cart-item-price">$95.00</div>
+          <button class="cart-item-remove" type="button">Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="summary-divider" />
+
+    <div class="price-breakdown">
+      <div class="price-row"><span class="label">Subtotal</span><span class="value" id="subtotalValue">$245.00</span></div>
+      <div class="price-row discount"><span class="label" id="promoLabel">Promo Code</span><span class="value" id="promoValue">$0.00</span></div>
+      <div class="price-row"><span class="label">Gift Wrapping</span><span class="value" id="giftValue">$0.00</span></div>
+      <div class="price-row"><span class="label" id="shippingLabel">Express Shipping</span><span class="value" id="shippingValue">$12.95</span></div>
+      <div class="price-row"><span class="label">Estimated Tax</span><span class="value" id="taxValue">$0.00</span></div>
+      <div class="price-row total"><span class="label">Order Total</span><span class="value" id="totalValue">$0.00</span></div>
+    </div>
+
+    <hr class="summary-divider" />
+
+    <!-- Trust badges -->
+    <div class="trust-badges">
+      <div class="trust-badge"><span class="badge-icon">🔒</span><div class="badge-text"><strong>SSL Secured</strong>256-bit encryption</div></div>
+      <div class="trust-badge"><span class="badge-icon">↩️</span><div class="badge-text"><strong>Free Returns</strong>Within 30 days</div></div>
+      <div class="trust-badge"><span class="badge-icon">📦</span><div class="badge-text"><strong>Fast Shipping</strong>1–2 day processing</div></div>
+      <div class="trust-badge"><span class="badge-icon">💬</span><div class="badge-text"><strong>Live Support</strong>Mon–Sat 9am–6pm</div></div>
+    </div>
+
+    <!-- Giving Back note -->
+    <div class="giving-note">
+      <strong>✦ Your Purchase Gives Back</strong>
+      A portion of every L'Moni order is donated to nonprofit organizations serving women and families in San Antonio, Texas. Thank you for being part of something bigger.
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-bottom-simple">
+    <p>© 2026 L'Moni Maison de Mode · Lil'Monii's Enterprise LLC · San Antonio, TX</p>
+    <div class="footer-links">
+      <a href="#" data-help-topic="privacy">Privacy Policy</a>
+      <a href="#" data-help-topic="terms">Terms of Service</a>
+      <a href="#" data-help-topic="contact">Contact Us</a>
+      <a href="#" data-help-topic="returns">Returns</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Cursor
+  const cursor=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px';});
+  function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);}
+  animRing();
+  document.querySelectorAll('a,button,input,select,textarea').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{cursor.style.width='20px';cursor.style.height='20px';ring.style.width='50px';ring.style.height='50px';ring.style.opacity='.4';});
+    el.addEventListener('mouseleave',()=>{cursor.style.width='10px';cursor.style.height='10px';ring.style.width='36px';ring.style.height='36px';ring.style.opacity='.6';});
+  });
+
+  // Shipping selector
+  function selectShipping(el) {
+    document.querySelectorAll('.shipping-opt').forEach(x=>x.classList.remove('selected'));
+    el.classList.add('selected');
+    updateSummary();
+  }
+
+  // Payment selector
+  function selectPayment(el) {
+    document.querySelectorAll('.pay-method').forEach(x=>x.classList.remove('selected'));
+    el.classList.add('selected');
+    updatePaymentUI();
+    updateSummary();
+  }
+
+  // Gift toggles
+  function toggleGift(el) {
+    el.classList.toggle('active');
+    if(el.id==='giftNoteToggle') {
+      const field=document.getElementById('messageField');
+      field.style.display=el.classList.contains('active')?'grid':'none';
+    }
+    updateSummary();
+  }
+
+  // Card number formatter
+  document.getElementById('cardNum').addEventListener('input',function(){
+    let val=this.value.replace(/\D/g,'').substring(0,16);
+    this.value=val.replace(/(.{4})/g,'$1 ').trim();
+  });
+
+  const HELP_TOPICS = {
+    privacy: {
+      title: 'Privacy Policy',
+      content: '<p>We only use your order information to process payments, fulfill shipments, and provide support.</p><p>We do not sell customer data. Marketing messages are opt-in and can be unsubscribed from at any time.</p><p>Questions: <a href="mailto:support@lmonimaison.com">support@lmonimaison.com</a></p>'
+    },
+    terms: {
+      title: 'Terms of Service',
+      content: '<p>Orders are subject to payment verification and product availability.</p><p>Shipping timelines are estimates and may vary by carrier delays. By placing an order, you agree to return and refund terms.</p><p>For full policy details, contact <a href="mailto:support@lmonimaison.com">support@lmonimaison.com</a>.</p>'
+    },
+    contact: {
+      title: 'Contact Us',
+      content: '<p>Customer Care is available Monday-Saturday, 9:00 AM-6:00 PM CST.</p><p>Email: <a href="mailto:support@lmonimaison.com">support@lmonimaison.com</a></p><p>Phone: <a href="tel:+12105550121">+1 (210) 555-0121</a></p>'
+    },
+    returns: {
+      title: 'Returns',
+      content: '<p>Returns are accepted within 30 days for unworn items with original tags.</p><p>Sale and personalized items are final sale unless defective on arrival.</p><p>Start a return: <a href="mailto:support@lmonimaison.com?subject=Start%20Return">support@lmonimaison.com</a>.</p>'
+    }
+  };
+
+  const SHIPPING_PRICES = {
+    'Standard Shipping': 0,
+    'Express Shipping': 12.95,
+    'Overnight Shipping': 28.95
+  };
+
+  const PROMO_CODES = {
+    LMONI10: 0.10,
+    WELCOME15: 0.15
+  };
+
+  const PAYMENT_LINKS = {
+    paypal: 'REPLACE_WITH_YOUR_PAYPAL_CHECKOUT_URL',
+    square: 'https://lmoni.square.site/'
+  };
+
+  const PAYPAL_BUSINESS_EMAIL = 'jarmani@lilmoniis.com';
+
+  let appliedPromoCode = '';
+  let appliedPromoRate = 0;
+
+  function getSelectedPaymentMethod() {
+    const selected = document.querySelector('.pay-method.selected');
+    return selected ? selected.dataset.method : 'card';
+  }
+
+  function updatePaymentUI() {
+    const method = getSelectedPaymentMethod();
+    const cardFields = document.getElementById('cardPaymentFields');
+    const hostedPayNote = document.getElementById('hostedPayNote');
+    const hostedButtons = document.querySelectorAll('.hosted-pay-btn');
+    const showHosted = method === 'paypal' || method === 'square';
+    cardFields.style.display = showHosted ? 'none' : 'block';
+    hostedPayNote.classList.toggle('show', showHosted);
+    hostedButtons.forEach(btn=>btn.classList.toggle('active', btn.dataset.method === method));
+  }
+
+  function formatMoney(amount) {
+    return `$${amount.toFixed(2)}`;
+  }
+
+  function getItemsSubtotal() {
+    const prices = Array.from(document.querySelectorAll('.cart-item-price')).map(el=>{
+      const parsed = parseFloat(el.textContent.replace(/[^\d.]/g, ''));
+      return Number.isFinite(parsed) ? parsed : 0;
+    });
+    return prices.reduce((sum, value)=>sum + value, 0);
+  }
+
+  function getSelectedShipping() {
+    const selected = document.querySelector('.shipping-opt.selected .shipping-opt-label');
+    return selected ? selected.textContent.trim() : 'Standard Shipping';
+  }
+
+  function updateSummary() {
+    const subtotal = getItemsSubtotal();
+    const shippingName = getSelectedShipping();
+    const shippingCost = SHIPPING_PRICES[shippingName] ?? 0;
+    const paymentMethod = getSelectedPaymentMethod();
+    const giftWrap = document.getElementById('giftWrapToggle').classList.contains('active') ? 5 : 0;
+    const promoValue = subtotal * appliedPromoRate;
+    const taxable = Math.max(subtotal - promoValue + shippingCost + giftWrap, 0);
+    const tax = taxable * 0.075;
+    const total = taxable + tax;
+
+    document.getElementById('summaryTitle').textContent = `Your Order (${document.querySelectorAll('.cart-item').length} items)`;
+    document.getElementById('subtotalValue').textContent = formatMoney(subtotal);
+    document.getElementById('promoLabel').textContent = appliedPromoCode ? `Promo Code: ${appliedPromoCode}` : 'Promo Code';
+    document.getElementById('promoValue').textContent = promoValue > 0 ? `-${formatMoney(promoValue)}` : '$0.00';
+    document.getElementById('giftValue').textContent = formatMoney(giftWrap);
+    document.getElementById('shippingLabel').textContent = shippingName;
+    document.getElementById('shippingValue').textContent = formatMoney(shippingCost);
+    document.getElementById('taxValue').textContent = formatMoney(tax);
+    document.getElementById('totalValue').textContent = formatMoney(total);
+    const placeOrderLabel = paymentMethod === 'paypal'
+      ? `🅿 Continue to PayPal — ${formatMoney(total)}`
+      : paymentMethod === 'square'
+        ? `◼ Continue to Square — ${formatMoney(total)}`
+        : `🔒 Place Order Securely — ${formatMoney(total)}`;
+    document.getElementById('placeOrderBtn').textContent = placeOrderLabel;
+    const isCartEmpty = document.querySelectorAll('.cart-item').length === 0;
+    document.getElementById('placeOrderBtn').disabled = isCartEmpty;
+    document.querySelectorAll('.hosted-pay-btn').forEach(btn=>{ btn.disabled = isCartEmpty; });
+  }
+
+  function getCurrentTotalAmount() {
+    const totalText = document.getElementById('totalValue').textContent || '$0.00';
+    const parsed = parseFloat(totalText.replace(/[^\d.]/g, ''));
+    return Number.isFinite(parsed) ? parsed.toFixed(2) : '0.00';
+  }
+
+  function buildPayPalCheckoutUrl() {
+    const params = new URLSearchParams({
+      cmd: '_xclick',
+      business: PAYPAL_BUSINESS_EMAIL,
+      item_name: 'LMoni Maison de Mode Order',
+      currency_code: 'USD',
+      amount: getCurrentTotalAmount()
+    });
+    return `https://www.paypal.com/cgi-bin/webscr?${params.toString()}`;
+  }
+
+  function redirectToHostedCheckout(method) {
+    const target = method === 'paypal'
+      ? ((PAYMENT_LINKS.paypal && !PAYMENT_LINKS.paypal.includes('REPLACE_WITH_YOUR_'))
+        ? PAYMENT_LINKS.paypal
+        : buildPayPalCheckoutUrl())
+      : (PAYMENT_LINKS[method] || '');
+    if(!target || target.includes('REPLACE_WITH_YOUR_')) {
+      alert(`Add your ${method.toUpperCase()} checkout URL in PAYMENT_LINKS inside checkout.html to enable live payments.`);
+      return;
+    }
+    window.location.href = target;
+  }
+
+  function selectPaymentMethodByName(method) {
+    const target = document.querySelector(`.pay-method[data-method="${method}"]`);
+    if(!target) return;
+    selectPayment(target);
+  }
+
+  document.querySelectorAll('.hosted-pay-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const method = btn.dataset.method;
+      if(!method || document.querySelectorAll('.cart-item').length === 0) return;
+      selectPaymentMethodByName(method);
+      redirectToHostedCheckout(method);
+    });
+  });
+
+  document.getElementById('promoApplyBtn').addEventListener('click',()=>{
+    const promoInput = document.getElementById('promoCodeInput');
+    const code = promoInput.value.trim().toUpperCase();
+    if(!code) {
+      appliedPromoCode = '';
+      appliedPromoRate = 0;
+      promoInput.placeholder = 'Enter promo code';
+      updateSummary();
+      return;
+    }
+
+    if(PROMO_CODES[code]) {
+      appliedPromoCode = code;
+      appliedPromoRate = PROMO_CODES[code];
+      promoInput.value = code;
+    } else {
+      appliedPromoCode = '';
+      appliedPromoRate = 0;
+      promoInput.value = '';
+      promoInput.placeholder = 'Code not recognized';
+    }
+    updateSummary();
+  });
+
+  document.querySelectorAll('.cart-item-remove').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const item = btn.closest('.cart-item');
+      if(!item) return;
+      item.remove();
+      updateSummary();
+    });
+  });
+
+  const helpOverlay = document.getElementById('helpOverlay');
+  const helpTitle = document.getElementById('helpTitle');
+  const helpContent = document.getElementById('helpContent');
+
+  function openHelp(topic) {
+    const data = HELP_TOPICS[topic];
+    if(!data) return;
+    helpTitle.textContent = data.title;
+    helpContent.innerHTML = data.content;
+    helpOverlay.classList.add('show');
+    helpOverlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeHelp() {
+    helpOverlay.classList.remove('show');
+    helpOverlay.setAttribute('aria-hidden', 'true');
+  }
+
+  document.querySelectorAll('[data-help-topic]').forEach(link=>{
+    link.addEventListener('click',e=>{
+      e.preventDefault();
+      openHelp(link.dataset.helpTopic);
+    });
+  });
+
+  document.getElementById('helpCloseBtn').addEventListener('click', closeHelp);
+  helpOverlay.addEventListener('click',e=>{
+    if(e.target === helpOverlay) closeHelp();
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key === 'Escape') closeHelp();
+  });
+
+  // Confetti burst
+  function launchConfetti() {
+    const colors=['#b8965a','#d4b483','#f7f2ea','#c9a7a7','#ffffff'];
+    for(let i=0;i<60;i++){
+      const dot=document.createElement('div');
+      dot.className='confetti-dot';
+      dot.style.cssText=`left:${Math.random()*100}vw;top:-10px;background:${colors[Math.floor(Math.random()*colors.length)]};--dur:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.8}s;width:${4+Math.random()*6}px;height:${4+Math.random()*6}px;`;
+      document.body.appendChild(dot);
+      setTimeout(()=>dot.remove(),(3+Math.random()*2)*1000);
+    }
+  }
+
+  // Place order
+  document.getElementById('placeOrderBtn').addEventListener('click',function(){
+    if(document.querySelectorAll('.cart-item').length === 0) return;
+    const paymentMethod = getSelectedPaymentMethod();
+    if(paymentMethod === 'paypal' || paymentMethod === 'square') {
+      redirectToHostedCheckout(paymentMethod);
+      return;
+    }
+
+    this.textContent='Processing...';
+    this.style.background='rgba(184,150,90,.5)';
+    this.disabled=true;
+    setTimeout(()=>{
+      document.getElementById('confirmation').classList.add('show');
+      launchConfetti();
+      this.style.background='';
+      updateSummary();
+    },1800);
+  });
+
+  updatePaymentUI();
+  updateSummary();
+</script>
+</body>
+</html>
